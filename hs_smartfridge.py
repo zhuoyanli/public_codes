@@ -1,3 +1,4 @@
+import json
 from typing import List, Dict, Optional, Any
 
 
@@ -50,19 +51,32 @@ class Item:
 
 from enum import Enum
 
+
+# assume chicken good for 3 days
+# assume apple good for a week
+
+class Freshness(Enum):
+    chicken = 9
+    apple = 14
+
 class DailySpoil(Enum):
     chicken = 3
     apple = 2
     waterbottle = 0
 
-def get_item(name: str, freshness: int = 0, daily_spoil: Optional[int] = None) -> Item:
+def get_item(name: str, freshness: Optional[int] = None, daily_spoil: Optional[int] = None) -> Item:
+    if freshness is None:
+        if name not in Freshness.__members__:
+            # just assume unknown item is non-perishable
+            freshness = 1
+        else:
+            freshness = Freshness[name].value
     if daily_spoil is None:
         if name not in DailySpoil.__members__:
-            # just assume unknown item is spoiled the next day
-            daily_spoil = 65535
+            # just assume unknown item is non-perishable
+            daily_spoil = 0
         else:
             daily_spoil = DailySpoil[name].value
-            print(name, daily_spoil)
     return Item(name, freshness, daily_spoil)
 
 
@@ -213,6 +227,7 @@ def test_fridge():
     fridge.put("apple", 3)
     disp = fridge.display(redirect=False)
     disp = fridge.display(show_freshness=True)
+    print(json.dumps(fridge.as_dict(), indent=2))
     disp = fridge.display(redirect=True)
     assert "chicken, 1 Count" in disp
     assert "apple, 3 Count" in disp
