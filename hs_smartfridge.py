@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 
 class Item:
@@ -32,6 +32,21 @@ class Item:
             return -1
         self._freshness = self._freshness - self._daily_spoil if self._freshness > self._daily_spoil else 0
         return self._freshness
+
+    def as_dict(self) -> Dict[str, any]:
+        _dict = dict(
+            name=self._name
+        )
+        if self.non_perishable:
+            _dict.update(
+                non_perishable=True
+            )
+        else:
+            _dict.update(
+                freshness=self._freshness,
+                daily_spoil=self._daily_spoil
+            )
+        return _dict
 
 from enum import Enum
 
@@ -170,6 +185,17 @@ class SmartFridge():
             return
         else:
             return display
+
+    def as_dict(self) -> Dict[str, Any]:
+        if not self._item_counter:
+            return {}
+        json_obj = {
+            item_name: []
+            for item_name in self._item_counter.keys()
+        }
+        for item in self._cabinet:
+            json_obj[item.name].append(item.as_dict())
+        return json_obj
 
 def test_fridge():
     fridge = SmartFridge(20)
